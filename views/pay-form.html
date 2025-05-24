@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>NewebPay 測試付款</title>
+</head>
+<body>
+  <h2>測試付款表單</h2>
+  <form id="payForm">
+    <input type="text" name="orderNo" placeholder="訂單編號" required /><br />
+    <input type="number" name="amount" placeholder="金額" required /><br />
+    <input type="text" name="description" placeholder="商品描述" required /><br />
+    <input type="email" name="email" placeholder="Email" required /><br />
+    <button type="submit">送出</button>
+  </form>
+
+  <script>
+    document.getElementById('payForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+
+      const res = await fetch('/api/newebpay/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = result.PayURL;
+
+      ['MerchantID', 'TradeInfo', 'TradeSha', 'Version'].forEach(key => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = result[key];
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+    });
+  </script>
+</body>
+</html>
